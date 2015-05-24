@@ -6,26 +6,16 @@ public class QuickSorter extends Thread {
     private QuickSorter parent;
     private IntegerList listToSort;
     private int sortedLists;
-    private int threadsInUse;
 
     public QuickSorter(IntegerList listToSort, Integer maxThreadsCount) {
         this.listToSort = listToSort;
         sortedLists = 0;
-        threadsInUse = 0;
         this.maxThreadsCount = maxThreadsCount;
     }
 
     public QuickSorter(IntegerList listToSort, QuickSorter parent) {
-        this.listToSort = listToSort;
-        sortedLists = 0;
+        this(listToSort, parent.maxThreadsCount);
         this.parent = parent;
-        maxThreadsCount = parent.maxThreadsCount;
-        parent.notifyAboutNewThread();
-        threadsInUse = parent.threadsInUse;
-    }
-
-    private void notifyAboutNewThread() {
-        threadsInUse ++;
     }
 
     public synchronized void sort() throws InterruptedException {
@@ -34,16 +24,7 @@ public class QuickSorter extends Thread {
         IntegerList left = listToSort.lessThan(pivot);
         IntegerList right = listToSort.greaterThan(pivot);
 
-        while(maxThreadsCount == threadsInUse) {
-            System.out.println("Threads in use: " + threadsInUse);
-            wait();
-        }
         new QuickSorter(left, this).start();
-
-        while(maxThreadsCount == threadsInUse) {
-            System.out.println("Threads in use: " + threadsInUse);
-            wait();
-        }
         new QuickSorter(right, this).start();
 
         while(sortedLists < 2)
@@ -56,13 +37,7 @@ public class QuickSorter extends Thread {
 
     public synchronized void finishedSorting() {
         sortedLists ++;
-        if(parent != null)
-            parent.releaseThread();
         notifyAll();
-    }
-
-    private synchronized void releaseThread() {
-        threadsInUse --;
     }
 
     @Override
