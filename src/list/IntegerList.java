@@ -7,13 +7,16 @@ public class IntegerList {
 
 	private List<Integer> list;
 	private int maxThreads;
+    private int threadsInUse;
+    private boolean sorted;
 
-	public IntegerList() {
+    public IntegerList() {
 		list = new LinkedList<>();
 	}
 
 	public IntegerList(List<Integer> aList) {
 		list = aList;
+        sorted = false;
 	}
 
 	public synchronized int size() {
@@ -32,7 +35,7 @@ public class IntegerList {
 		list.add(anInteger);
 	}
 	
-	public synchronized int get(Integer anIndex) {
+	public synchronized Integer get(Integer anIndex) {
 		return list.get(anIndex);
 	}
 	
@@ -41,33 +44,8 @@ public class IntegerList {
 	}
 	
 	public synchronized void sort() throws InterruptedException {
-		new QuickSorter(this, maxThreads).sort();
-	}
-
-	public synchronized IntegerList lessThan(Integer anInteger) {
-		IntegerList result = new IntegerList();
-		for (Integer listElement : list) {
-			if(listElement < anInteger)
-				result.add(listElement);
-		}
-		return result;
-	}
-
-	public synchronized IntegerList greaterThan(Integer anInteger) {
-		IntegerList result = new IntegerList();
-		for (Integer listElement : list) {
-			if(listElement > anInteger)
-				result.add(listElement);
-		}
-		return result;
-	}
-
-	public synchronized void concat(IntegerList anotherList) {
-		list.addAll(anotherList.toLinkedList());
-	}
-
-	public synchronized void sortLike(IntegerList aList, QuickSorter aSorter) {
-		list = aList.toLinkedList();
+		new QuickSorter(this).sort(0, list.size() - 1);
+        while(!isSorted()) wait();
 	}
 
 	@Override
@@ -75,11 +53,42 @@ public class IntegerList {
 		return list.toString();
 	}
 
-	private List<Integer> toLinkedList() {
-		return list;
-	}
-
-	public void maxThreads(int threadsCount) {
+	public void setMaxThreads(int threadsCount) {
 		maxThreads = threadsCount;
 	}
+
+    public synchronized void finishedSorting() {
+        if(checkIsSorted())
+            notifyAll();
+    }
+
+    private boolean checkIsSorted() {
+        boolean isSorted = true;
+        for (int i = 1; i < list.size(); i++) {
+            if (list.get(i - 1).compareTo(list.get(i)) > 0) isSorted = false;
+        }
+
+        if (isSorted) setSorted(true);
+        return isSorted;
+    }
+
+	public synchronized boolean isSorted() {
+		return sorted;
+	}
+
+    public synchronized void registerThread() throws InterruptedException {
+        while(maxThreads == threadsInUse) {
+            wait();
+        }
+        threadsInUse ++;
+    }
+
+    public synchronized void releaseThread() {
+        threadsInUse --;
+        notifyAll();
+    }
+
+    public synchronized void setSorted(boolean sorted) {
+        this.sorted = sorted;
+    }
 }

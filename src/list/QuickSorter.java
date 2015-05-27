@@ -2,55 +2,70 @@ package list;
 
 public class QuickSorter extends Thread {
 
-    private Integer maxThreadsCount;
-    private QuickSorter parent;
+    private Integer higherIndex;
+    private Integer lowerIndex;
     private IntegerList listToSort;
-    private int sortedLists;
 
-    public QuickSorter(IntegerList listToSort, Integer maxThreadsCount) {
+    public QuickSorter(IntegerList listToSort) {
         this.listToSort = listToSort;
-        sortedLists = 0;
-        this.maxThreadsCount = maxThreadsCount;
     }
 
-    public QuickSorter(IntegerList listToSort, QuickSorter parent) {
-        this(listToSort, parent.maxThreadsCount);
-        this.parent = parent;
+    public QuickSorter(IntegerList listToSort, Integer lowerIndex, Integer higherIndex) {
+        this.listToSort = listToSort;
+        this.lowerIndex = lowerIndex;
+        this.higherIndex = higherIndex;
     }
 
-    public synchronized void sort() throws InterruptedException {
-        if(listToSort.size() <= 1) return;
-        int pivot = listToSort.get(listToSort.size() / 2);
-        IntegerList left = listToSort.lessThan(pivot);
-        IntegerList right = listToSort.greaterThan(pivot);
+    public synchronized void sort(Integer lowerIndex, Integer higherIndex) throws InterruptedException {
+        if(lowerIndex >= higherIndex) {
+            listToSort.finishedSorting();
+            return;
+        }
 
-        new QuickSorter(left, this).start();
-        new QuickSorter(right, this).start();
+        int pivot = listToSort.get(higherIndex);
+        int partition = partition(lowerIndex, higherIndex, pivot);
 
-        while(sortedLists < 2)
-            wait();
+        startNewThread(listToSort, 0, partition - 1);
+        startNewThread(listToSort, partition + 1, higherIndex);
 
-        left.add(pivot);
-        left.concat(right);
-        listToSort.sortLike(left, this);
+        listToSort.finishedSorting();
     }
 
-    public synchronized void finishedSorting() {
-        sortedLists ++;
-        notifyAll();
+    @SuppressWarnings("StatementWithEmptyBody")
+    private int partition(int left, int right, int pivot){
+        int leftCursor = left - 1;
+        int rightCursor = right;
+        while(leftCursor < rightCursor){
+            while(listToSort.get(++leftCursor) < pivot);
+            while(rightCursor > 0 && listToSort.get(--rightCursor) > pivot);
+
+            if(leftCursor < rightCursor)
+                swap(leftCursor, rightCursor);
+        }
+        swap(leftCursor, right);
+        return leftCursor;
+    }
+
+    private synchronized void startNewThread(IntegerList listToSort, Integer  lowIndex, Integer highIndex) {
+        if(!listToSort.isSorted())
+            new QuickSorter(listToSort, lowIndex, highIndex).start();
+    }
+
+    private void swap(int i, int j) {
+        int temp = listToSort.get(i);
+        listToSort.set(i, listToSort.get(j));
+        listToSort.set(j, temp);
     }
 
     @Override
     public void run() {
         try {
-            sortAndNotify();
+            listToSort.registerThread();
+            sort(lowerIndex, higherIndex);
+            listToSort.releaseThread();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
-    private void sortAndNotify() throws InterruptedException {
-        sort();
-        parent.finishedSorting();
-    }
 }
