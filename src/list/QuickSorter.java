@@ -43,8 +43,7 @@ public class QuickSorter extends Thread {
     }
 
     private synchronized void startNewThread(IntegerList listToSort, Integer  lowIndex, Integer highIndex) {
-        if(!listToSort.isSorted())
-            new QuickSorter(listToSort, lowIndex, highIndex).start();
+        new QuickSorter(listToSort, lowIndex, highIndex).start();
     }
 
     private void swap(int i, int j) {
@@ -64,12 +63,14 @@ public class QuickSorter extends Thread {
 
     @Override
     public synchronized void start() {
-        try {
-            listToSort.registerThread();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
+        if(!listToSort.isSorted()) {
+            try {
+                listToSort.registerThread();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            super.start();
+            listToSort.releaseThread();
         }
-        super.start();
-        listToSort.releaseThread();
     }
 }

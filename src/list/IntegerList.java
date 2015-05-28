@@ -35,6 +35,7 @@ public class IntegerList {
 	
 	public synchronized void add(Integer anInteger) {
 		list.add(anInteger);
+		setSorted(false);
 	}
 	
 	public synchronized Integer get(Integer anIndex) {
@@ -43,12 +44,20 @@ public class IntegerList {
 	
 	public synchronized void set(Integer anIndex, Integer anElementToAdd) {
 		list.set(anIndex, anElementToAdd);
+		if(!checkIsSorted(anIndex == 0 ? anIndex + 1 : anIndex, anIndex + 1))
+			setSorted(false);
 	}
 	
 	public synchronized void sort() throws InterruptedException {
 		if(!isEmpty()) {
+			long startTime = System.currentTimeMillis();
+
 			new QuickSorter(this, 0, list.size() - 1).sort();
 			while (!isSorted()) wait();
+
+			long endTime   = System.currentTimeMillis();
+			long totalTime = endTime - startTime;
+			System.out.println("Sorting time: " + totalTime);
 		}
 	}
 
@@ -62,13 +71,17 @@ public class IntegerList {
 	}
 
     public boolean checkIsSorted() {
-        boolean isSorted = true;
-        for (int i = 1; i < list.size(); i++) {
-            if (list.get(i - 1).compareTo(list.get(i)) > 0) isSorted = false;
-        }
-
-        return isSorted;
+		return checkIsSorted(1, size());
     }
+
+	private boolean checkIsSorted(int fromIndex, int toIndex) {
+		boolean isSorted = true;
+		for (int i = fromIndex; i < toIndex; i++) {
+			if (get(i - 1).compareTo(get(i)) > 0) isSorted = false;
+		}
+
+		return isSorted;
+	}
 
 	public synchronized boolean isSorted() {
 		return sorted;
