@@ -9,14 +9,16 @@ public class IntegerList {
 	private int maxThreads;
     private int threadsInUse;
     private boolean sorted;
+	private int sortedElements;
 
-    public IntegerList() {
+	public IntegerList() {
 		list = new LinkedList<>();
 	}
 
 	public IntegerList(List<Integer> aList) {
 		list = aList;
         sorted = false;
+		sortedElements = 0;
 	}
 
 	public synchronized int size() {
@@ -44,8 +46,10 @@ public class IntegerList {
 	}
 	
 	public synchronized void sort() throws InterruptedException {
-		new QuickSorter(this).sort(0, list.size() - 1);
-        while(!isSorted()) wait();
+		if(!isEmpty()) {
+			new QuickSorter(this, 0, list.size() - 1).sort();
+			while (!isSorted()) wait();
+		}
 	}
 
 	@Override
@@ -57,18 +61,12 @@ public class IntegerList {
 		maxThreads = threadsCount;
 	}
 
-    public synchronized void finishedSorting() {
-        if(checkIsSorted())
-            notifyAll();
-    }
-
-    private boolean checkIsSorted() {
+    public boolean checkIsSorted() {
         boolean isSorted = true;
         for (int i = 1; i < list.size(); i++) {
             if (list.get(i - 1).compareTo(list.get(i)) > 0) isSorted = false;
         }
 
-        if (isSorted) setSorted(true);
         return isSorted;
     }
 
@@ -91,4 +89,15 @@ public class IntegerList {
     public synchronized void setSorted(boolean sorted) {
         this.sorted = sorted;
     }
+
+	public synchronized void finishedSorting() throws InterruptedException {
+		this.sortedElements ++;
+
+		if(this.sortedElements >= size()) {
+			if (checkIsSorted()) {
+				setSorted(true);
+				notifyAll();
+			}
+		}
+	}
 }

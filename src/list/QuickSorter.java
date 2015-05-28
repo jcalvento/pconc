@@ -6,17 +6,13 @@ public class QuickSorter extends Thread {
     private Integer lowerIndex;
     private IntegerList listToSort;
 
-    public QuickSorter(IntegerList listToSort) {
-        this.listToSort = listToSort;
-    }
-
     public QuickSorter(IntegerList listToSort, Integer lowerIndex, Integer higherIndex) {
         this.listToSort = listToSort;
         this.lowerIndex = lowerIndex;
         this.higherIndex = higherIndex;
     }
 
-    public synchronized void sort(Integer lowerIndex, Integer higherIndex) throws InterruptedException {
+    public synchronized void sort() throws InterruptedException {
         if(lowerIndex >= higherIndex) {
             listToSort.finishedSorting();
             return;
@@ -60,12 +56,20 @@ public class QuickSorter extends Thread {
     @Override
     public void run() {
         try {
-            listToSort.registerThread();
-            sort(lowerIndex, higherIndex);
-            listToSort.releaseThread();
+            sort();
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
     }
 
+    @Override
+    public synchronized void start() {
+        try {
+            listToSort.registerThread();
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+        super.start();
+        listToSort.releaseThread();
+    }
 }
