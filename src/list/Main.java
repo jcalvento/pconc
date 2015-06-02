@@ -11,7 +11,7 @@ public class Main {
         System.out.println("Esta ordenada?: " + integerList0.checkIsSorted());
         System.out.println();
 
-        IntegerList integerList1 = new IntegerList(new LinkedList<>(Collections.singletonList(0)));
+        IntegerList integerList1 = new IntegerList(new ArrayList<>(Collections.singletonList(0)));
         integerList1.setMaxThreads(2);
         integerList1.sort();
         System.out.println("Lista de 1 elemento: " + integerList1.toString());
@@ -32,7 +32,7 @@ public class Main {
         System.out.println("Esta ordenada?: " + integerList3.checkIsSorted());
         System.out.println();
 
-        IntegerList orderedList = new IntegerList(new LinkedList<>(Arrays.asList(1, 5, 10, 11, 13, 14, 15, 16, 17, 20)));
+        IntegerList orderedList = new IntegerList(new ArrayList<>(Arrays.asList(1, 5, 10, 11, 13, 14, 15, 16, 17, 20)));
         orderedList.setMaxThreads(2);
         orderedList.sort();
         System.out.println("Lista ya ordenada: " + orderedList.toString());
@@ -53,15 +53,16 @@ public class Main {
         System.out.println("Esta ordenada?: " + orderedList.checkIsSorted());
         System.out.println();
 
-        List<Integer> list = new LinkedList<>();
-        for (int i = 0; i < 3000; i += 1) {
+        List<Integer> list = new ArrayList<>();
+        for (int i = 0; i < 200; i += 1) {
             list.add((int)(Math.random() * 12345 + 1));
         }
-        list = new LinkedList<>(new HashSet<>(list));
+        list = new ArrayList<>(new HashSet<>(list));
         IntegerList integerList = new IntegerList(list);
-        integerList.setMaxThreads(20);
+        integerList.setMaxThreads(16);
+        System.out.println("Lista original: " + integerList.toString());
         integerList.sort();
-        System.out.println("Ordered list de muchos: " + integerList.toString());
+        System.out.println("Lista de muchos random: " + integerList.toString());
         System.out.println("Esta ordenada?: " + integerList.checkIsSorted());
         System.out.println();
     }

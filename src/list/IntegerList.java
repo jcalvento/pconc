@@ -13,6 +13,7 @@ public class IntegerList {
 
 	public IntegerList() {
 		list = new LinkedList<>();
+		sorted = true;
 	}
 
 	public IntegerList(List<Integer> aList) {

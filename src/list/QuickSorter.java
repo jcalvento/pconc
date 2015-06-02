@@ -55,22 +55,11 @@ public class QuickSorter extends Thread {
     @Override
     public void run() {
         try {
+            listToSort.registerThread();
             sort();
+            listToSort.releaseThread();
         } catch (InterruptedException e) {
             e.printStackTrace();
-        }
-    }
-
-    @Override
-    public synchronized void start() {
-        if(!listToSort.isSorted()) {
-            try {
-                listToSort.registerThread();
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-            super.start();
-            listToSort.releaseThread();
         }
     }
 }
