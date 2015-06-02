@@ -35,7 +35,7 @@ public class IntegerList {
 	
 	public synchronized void add(Integer anInteger) {
 		list.add(anInteger);
-		setSorted(false);
+		setSorted(size() == 1 || (isSorted() && get(size() - 2 ) < get(size() - 1)));
 	}
 	
 	public synchronized Integer get(Integer anIndex) {
@@ -49,16 +49,14 @@ public class IntegerList {
 	}
 	
 	public synchronized void sort() throws InterruptedException {
-		if(!isEmpty()) {
-			long startTime = System.currentTimeMillis();
-
+		long startTime = System.currentTimeMillis();
+		if(!isEmpty() || size() != 1 || checkIsSorted()) {
 			new QuickSorter(this, 0, list.size() - 1).sort();
 			while (!isSorted()) wait();
-
-			long endTime   = System.currentTimeMillis();
-			long totalTime = endTime - startTime;
-			System.out.println("Sorting time: " + totalTime);
 		}
+		long endTime   = System.currentTimeMillis();
+		long totalTime = endTime - startTime;
+		System.out.println("Sorting time: " + totalTime);
 	}
 
 	@Override
